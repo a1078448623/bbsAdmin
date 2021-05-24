@@ -1,0 +1,1897 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+    <meta charset="UTF-8">
+    <title>管理系统</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="layui-v2.6.5/layui/css/layui.css">
+    <script src="layui-v2.6.5/layui/layui.js"></script>
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script src="js/echarts.min.js"></script>
+    <script src="js/iconfont.js"></script>
+
+    <style>
+        .show_arts,.show_user,.home_mes,.show_ban,.show_sort,.show_comts,.show_elts,.show_news{display: none;}
+        .active{display: block!important;}
+        .u_count,.a_count,.c_count,.v_count{margin-top: 1vh;margin-left: 50px;height: 10vh;width:70%;border-radius: 10px;font-size: 25px;line-height: 8vh;}
+        .u_count{background-color:#2F4056;color: white;text-align: center;}
+        .u_count>p{line-height: 0 !important;}
+        .a_count{background-color:#009688;color: white;text-align: center;}
+        .a_count>p{line-height: 0 !important;}
+        .c_count{background-color:#5FB878;color: white;text-align: center;}
+        .c_count>p,.v_count>p{line-height: 0 !important;}
+        .v_count{background-color:#01AAED;color: white;text-align: center;}
+        .layui-table-cell{height: 36px;line-height: 36px}
+        .layui-tree-entry{height: 45px}
+        .layui-tree-icon{height: 25px;line-height: 25px;width: 25px;}
+        .layui-tree-icon .layui-icon{font-size:20px}
+        .layui-tree-iconClick .layui-icon{font-size:20px}
+        .layui-tree-btnGroup .layui-icon{font-size: 27px}
+        .layui-tree-editInput{height: 35px}
+        .icon {width: 1em;height: 1em;vertical-align: -0.15em;fill: currentColor;overflow: hidden;}
+    </style>
+
+</head>
+
+<!--统计浏览量-->
+    <script>
+        $(function (){
+            $.ajax({
+                url:'/index/addvisit',
+                method:"post",
+                success:function (res){
+                    $.ajax({
+                        url:"/index/getdata",
+                        method:"post",
+                        success:function (data){
+                            $(".a_count >p").html(data.art_count)
+                            $(".u_count >p").html(data.u_dount)
+                            $(".c_count >p").html(data.commt_count)
+                            $(".v_count >p").html(data.visit_count)
+                        }
+                    })
+                }
+            })
+
+        })
+
+    </script>
+<body>
+
+<!--主体导航栏-->
+<ul class="layui-nav layui-nav-tree layui-nav-side layui-bg-black" lay-filter="test" style="width: 12vw">
+    <!-- 侧边导航: <ul class="layui-nav layui-nav-tree layui-nav-side"> -->
+    <li>
+        <div style="height: 60px;text-align: center;font-size: 28px;
+        line-height: 60px;background-color: #0069b7">MyAdmin</div>
+    </li>
+    <li class="layui-nav-item layui-nav-itemed layui-this home_page"><a href="javascript:void (0);"><i class="layui-icon layui-icon-home"></i> 首页</a></li>
+    <li class="layui-nav-item"><a href="javascript:void (0);" id="allUser"><i class="layui-icon layui-icon-user"></i> 所有用户</a></li>
+    <li class="layui-nav-item"><a href="javascript:void(0);" id="allBans"><i class="layui-icon layui-icon-mute"></i> 禁言列表</a></li>
+    <li class="layui-nav-item"><a href="javascript:void (0);" id="allArts"><i class="layui-icon layui-icon-read"></i> 所有文章</a></li>
+    <li class="layui-nav-item"><a href="javascript:void (0);" id="allComts"><i class="layui-icon layui-icon-dialogue"></i> 所有评论</a></li>
+    <li class="layui-nav-item"><a href="javascript:void (0);" id="allEltop"><i class="layui-icon layui-icon-top"></i> 加精置顶</a></li>
+    <li class="layui-nav-item" id="allSort"><a href="javascript:void (0);"><i class="layui-icon layui-icon-app"></i> 分区管理</a></li>
+<!--    <li class="layui-nav-item"><a href="javascript:void (0);" ><i class="layui-icon layui-icon-diamond"></i> 首页推荐</a></li>-->
+    <li class="layui-nav-item"><a href="javascript:void (0);" id="allNews"><i class="layui-icon layui-icon-chart-screen"></i> 发布公告</a></li>
+</ul>
+
+<!--上边导航栏-->
+<div style="position: fixed;left: 12vw;width: 88vw;height: 100%;">
+    <ul class="layui-nav layui-bg-blue" lay-filter=" " style="text-align: right">
+        <li  style="position:absolute;left: 0;font-size: 18px;padding-left: 15px;line-height: 60px" ><i class="layui-icon layui-icon-layer" style="font-size: 18px"></i></li>
+        <li class="layui-nav-item"><a href=""><i class="layui-icon layui-icon-refresh-3"></i></a></li>
+        <li class="layui-nav-item">
+            <a href="javascript:void(0);" >管理员</a>
+            <dl class="layui-nav-child"> <!-- 二级菜单 -->
+                <dd><a href="">退出</a></dd>
+            </dl>
+        </li>
+    </ul>
+    <div class="right" style="border: solid 15px #f2f2f2;height: 100%">
+
+<!--首页显示的区域，默认激活，包括各种数据和图-->
+        <div class="home_mes active">
+            <div class="layui-row" style="border-bottom: solid 10px #f2f2f2;padding-bottom: 20px">
+                <div class="layui-col-lg3"><div class="u_count">用户数<p></p></div></div>
+                <div class="layui-col-lg3"><div class="a_count">文章数<p></p></div></div>
+                <div class="layui-col-lg3"><div class="c_count">评论数<p></p></div></div>
+                <div class="layui-col-lg3"><div class="v_count">浏览量<p></p></div></div>
+            </div>
+            <div class="layui-row">
+                <div id="w_num" class="layui-col-lg6" style="width: 63vw;height:39vh;margin-top: 20px"></div>
+                <div id="t_num" class="layui-col-lg6" style="width: 22vw;height:39vh;margin-top: 20px;"></div>
+                <div style="width: 100%;border-top: solid 10px #f2f2f2;height: 32vh;position: absolute;bottom: 0">
+                    <div id="t_c_num" class="layui-col-lg6" style="width: 50vw;height:31vh;border-right: solid 10px #f2f2f2;padding-top: 5px"></div>
+                    <div id="g_num" class="layui-col-lg6" style="width: 30vw;height:31vh;"></div>
+                </div>
+            </div>
+            <!-- 渲染首页的几个表格-->
+            <script type="text/javascript">
+                // 基于准备好的dom，初始化echarts实例
+                let t_n_chart = echarts.init(document.getElementById('t_num'),'light');
+                let t_c_chart = echarts.init(document.getElementById('t_c_num'),'light');
+                let g_chart = echarts.init(document.getElementById('g_num'),'light');
+                let week_chart = echarts.init(document.getElementById('w_num'),'light');
+                $.ajax({
+                    url:"/index/typenum",
+                    method:"post",
+                    success:function (res){
+                        let data=[]
+                        $.each(res,function (index,obj){
+                            data.push({value:obj.num,name:obj.t_name})
+                        })
+                        let d_bot=[],d_num=[]
+                        $.each(res,function (index,obj){
+                            d_bot.push(obj.t_name)
+                            d_num.push(obj.com_num)
+                        })
+                        let option = {
+                            title: {
+                                text: '各分区帖子数量'
+                            },
+                            tooltip: {},
+                            legend: {
+                                data:d_bot,
+                                top:"10%"
+                            },
+
+                            series: [{
+                                name: '帖子数量',
+                                itemStyle:{
+                                    normal:{
+                                        color:function (p) {
+                                            let colors=['RGB(107,230,193)','RGB(63,177,227)','RGB(98,108,145)','RGB(214,241,197)','RGB(188,193,237)','RGB(145,152,178)'];
+                                            return colors[p.dataIndex%6]
+                                        }
+                                    }
+                                },
+                                type: 'pie',
+                                data: data,
+                                top:'22%',
+                                radius: '45%',
+                            }]
+                        };
+
+                        // 使用刚指定的配置项和数据显示图表。
+                        t_n_chart.setOption(option);
+                    }
+                })
+                // 指定图表的配置项和数据
+                $.ajax({
+                    url:"/index/typeContnum",
+                    method:"post",
+                    success:function (res){
+                        let d_bot=[],d_num=[]
+
+                        $.each(res,function (index,obj){
+                            d_bot.push(obj.t_name)
+                            d_num.push(obj.com_num)
+                        })
+                        let option = {
+                            title: {
+                                text: '各分区回复数量'
+                            },
+                            tooltip: {},
+                            // legend: {
+                            //     data:['帖子数量']
+                            // },
+                            xAxis: {
+                                data: d_bot
+
+                            },
+
+                            yAxis: {},
+                            series: [{
+                                name: '帖子数量',
+                                itemStyle:{
+                                    normal:{
+                                        color:function (p) {
+                                            let colors=['RGB(107,230,193)','RGB(63,177,227)','RGB(98,108,145)','RGB(214,241,197)','RGB(188,193,237)','RGB(145,152,178)'];
+                                            return colors[p.dataIndex%6]
+                                        }
+                                    }
+                                },
+                                type: 'bar',
+                                data: d_num
+                            }]
+                        };
+
+                        // 使用刚指定的配置项和数据显示图表。
+                        t_c_chart.setOption(option);
+                    }
+
+                })
+                $.ajax({
+                    url:"/index/getgender",
+                    method:"post",
+                    success:function (res){
+                        let data=[]
+                        $.each(res,function (index,obj){
+                            data.push({value:obj.g_num,name:obj.gender})
+                        })
+                        let option = {
+                            title: {
+                                text: '性别比例'
+                            },
+                            legend:{
+                                data:['男','女'],
+                                orient:'vertical',
+                                right:'10%',
+                                top:'12%',
+                                lineStyle:{
+                                    lineHeight:10
+                                }
+                            },
+                            tooltip: {},
+                            series: [{
+
+                                radius: '45%',
+                                itemStyle:{
+                                    normal:{
+                                        color:function (p) {
+                                            let colors=['RGB(63,177,227)','RGB(252,157,154)'];
+                                            return colors[p.dataIndex%3]
+                                        }
+                                    }
+                                },
+                                roseType:'angel',
+                                type: 'pie',
+                                data: data
+                            }]
+                        };
+
+                        // 使用刚指定的配置项和数据显示图表。
+                        g_chart.setOption(option);
+                    }
+                })
+                $.ajax({
+                    url:"/index/artwnum",
+                    method:'post',
+                    data:{
+                        type:1
+                    },
+                    success:function (art){
+                        $.ajax({
+                            url:"/index/artwnum",
+                            method:'post',
+                            data:{
+                                type:2
+                            },
+                            success:function (comm){
+                                let a_data=[],c_data=[]
+                                $.each(art,function (index,obj){
+                                    if(obj.week!==1) a_data.push(obj.w_num)
+                                })
+                                $.each(comm,function (index,obj){
+                                    if(obj.week!==1) c_data.push(obj.w_c_num)
+                                })
+                                a_data.push(art[0].w_num)
+                                c_data.push(comm[0].w_c_num)
+                                let option = {
+                                    title: {
+                                        text: '周内发帖和回复统计'
+                                    },
+                                    tooltip: {},
+                                     legend: {
+                                         data:['帖子数量','评论数量']
+                                     },
+                                    xAxis: {
+                                        data: ['周一','周二','周三','周四','周五','周六','周日']
+                                    },
+                                    yAxis: {},
+                                    series: [{
+                                        name: '帖子数量',
+                                        itemStyle:{
+                                            normal:{
+                                                lineStyle:{
+                                                    width:4
+                                                }
+                                            }
+                                        },
+                                        type: 'line',
+                                        symbolSize:10,
+                                        color: "RGB(188,193,237)",
+                                        smooth:"true",seriesLayoutBy: 'row',
+                                        emphasis: {focus: 'series'},
+                                        data: a_data
+                                    },{
+                                        name: '评论数量',
+                                        itemStyle:{
+                                            normal:{
+                                                lineStyle:{
+                                                    width:4,
+
+                                                }
+                                            }
+                                        },
+                                        smooth:"true",
+                                        symbolSize:10,
+                                        seriesLayoutBy: 'row',
+                                        emphasis: {focus: 'series'},
+                                        color:'RGB(111,221,205)',
+                                        type: 'line',
+                                        data: c_data
+                                    }
+                                    ]
+                                };
+
+                                // 使用刚指定的配置项和数据显示图表。
+                                week_chart.setOption(option);
+                            }
+                    })
+                    }
+
+                })
+            </script>
+
+        </div>
+
+<!--所有用户的显示区域，一个表格-->
+        <div class="show_user" style="height: 80vh;margin-left: 30px">
+            <table id="user" class="layui-table" lay-even lay-filter="userf" lay-skin="nob" style="margin-top: 30px;"></table>
+        </div>
+<!--禁言列表的显示区域-->
+        <div class="show_ban" style="height: 80vh;margin-left: 30px">
+            <table id="bans" class="layui-table" lay-even lay-filter="banf" lay-skin="nob" style="margin-top: 30px;"></table>
+        </div>
+<!--所有文章的显示区域-->
+        <div class="show_arts" style="height: 80vh;margin-left: 30px">
+            <table id="arts" class="layui-table" lay-even lay-filter="artf" lay-skin="nob" style="margin-top: 30px;"></table>
+        </div>
+<!--所有评论的显示区域-->
+        <div class="show_comts" style="height: 80vh;margin-left: 30px">
+            <table id="commts" class="layui-table" lay-even lay-filter="comtf" lay-skin="nob" style="margin-top: 30px;"></table>
+        </div>
+<!--加精置顶显示区域-->
+        <div class="show_elts" style="height: 80vh;margin-left: 30px">
+            <div style="margin-top: 15px">
+                <span style="color: #666;font-size: 16px;margin-top: 6px" id="show_max_elite">分区最大精华贴数:</span>
+                <input type="text" placeholder="更改" id="elite_value" class="layui-input layui-input-inline" style="width: 6%;margin-left: 10px">
+                <button class="layui-btn" id="set_elite" style="margin-left: 10px;height: 35px;line-height: 35px">设置</button>
+                <span style="margin-left: 10vw;color: #666;font-size: 16px" id="show_max_top">分区最大置顶贴数:</span>
+                <input type="text" placeholder="更改" id="top_value" class="layui-input layui-input-inline" style="width: 6%;margin-left: 10px">
+                <button class="layui-btn" id="set_top" style="margin-left: 10px;height: 35px;line-height: 35px">设置</button>
+            </div>
+            <table id="eltop" class="layui-table" lay-even lay-filter="eltf" lay-skin="nob" style="margin-top: 10px;"></table>
+        </div>
+<!--所有专区的显示区域，包括一个树形组件，一个轮播图用于展示图片，以及一个文件上传组件上传图片-->
+        <div class="show_sort" style="height: 90vh;margin-left: 30px">
+            <div style="height: 100%;width: 35%;float: left;overflow: auto;">
+                <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                    <legend>分区管理</legend>
+                </fieldset>
+                <div id="test9" class="demo-tree demo-tree-box" style="width: 400px; height: 500px;font-size: 22px"></div>
+            </div>
+            <div style="float: right;width: 65%;height: 100%">
+                <div class="layui-btn-container" style="margin-top: 50px;float:left;width: 10%;" >
+                    <div ><button type="button" class="layui-btn layui-btn-normal" id="add_type" >增加分区</button></div>
+
+                </div>
+                <div id="show_content" style="float: right;height:100%;width: 85%;border-left: solid 15px #f2f2f2">
+                    <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                        <legend>分区背景显示</legend>
+                    </fieldset>
+
+                    <div class="layui-carousel" id="allBackImg" style="margin-left: 6%;height: 28vh!important;" lay-filter="carf">
+                        <div carousel-item id="imgItems">
+
+                        </div>
+
+                    </div>
+                    <div id="show_name" style="width: 100%;text-align: center;height: 2vh;font-size: 19px;line-height: 30px;margin-top: 10px"></div>
+                    <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                        <legend>背景图片设置</legend>
+                    </fieldset>
+                    <form class="layui-form">
+                        <div class="layui-form-item" style="margin-top: 50px">
+                            <label class="layui-form-label" style="width: 120px">选择分区</label>
+                            <div class="layui-input-block" style="width: 30%!important;padding-left: 50px">
+                                <select name="time" id="fnamelist_2" lay-verify="required" lay-filter="timg">
+                                    <option value=""></option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                    <div class="layui-upload" style="margin-top: 30px;margin-left: 3%">
+                        <button type="button" class="layui-btn layui-btn-disabled" id="test1" disabled="disabled" style="width: 180px;">上传图片</button>
+                        <div class="layui-upload-list" style="height: 60px;width: 180px;margin-top: 30px">
+                            <img class="layui-upload-img" id="demo1" style="height: 60px;width: 180px">
+                            <p id="demoText"></p>
+                        </div>
+                        <div style="width: 150px;margin-top: 30px;margin-left: 15px">
+                            <div class="layui-progress layui-progress-big" lay-showpercent="yes" lay-filter="demo">
+                                <div class="layui-progress-bar" lay-percent=""></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a name="list-progress"> </a>
+
+
+                </div>
+            </div>
+
+        </div>
+<!--发布公告的显示区域，包括显示公告和发布公告-->
+        <div class="show_news" style="height: 80vh;">
+            <fieldset class="layui-elem-field layui-field-title" style="margin-top: 10px;">
+                <legend>所有公告</legend>
+            </fieldset>
+            <div id="news" class="layui-row" style="width: 100%;height: 36vh;overflow: auto;" >
+            </div>
+            <div style="position: absolute;bottom: 0;width: 100%;border-top: solid 5px #f2f2f2">
+                <div class="layui-form">
+                    <div class="layui-form-item" style="margin-bottom: 5px;margin-top: 10px">
+                        <label class="layui-form-label"  style="text-align: center">标题</label>
+                        <div class="layui-input-inline" style="width: 55%">
+                            <input class="layui-input-inline layui-input" placeholder="请输入标题" style="width: 70%" id="title">
+                        </div>
+                        <label class="layui-form-label"  style="text-align: center">选择分区</label>
+                        <div class="layui-inline">
+                            <div class="layui-input-inline">
+                                <select name="type" lay-verify="required" id="tname_news">
+                                    <option value=""></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item" >
+                        <button type="reset" id="reset_news" style="position:absolute;top: -6114px"></button>
+                    </div>
+                </div>
+                <textarea id="input_news" style="display: none;"></textarea>
+                <div class="layui-row">
+                    <div class="layui-col-lg-offset11">
+                        <button class="layui-btn layui-btn-normal" style="margin-bottom: 10px;margin-top: 10px;" id="publish">发布</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 用户表的头部工具栏-->
+<script type="text/html" id="usertoolbar">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" lay-event="add">添加</button>
+        <button class="layui-btn layui-btn-sm" lay-event="delete">删除</button>
+    </div>
+</script>
+
+<!--评论表的头工具栏，实现搜索功能-->
+<script type="text/html" id="comttoolbar">
+    <div class="layui-btn-container" style="margin-bottom: 0">
+        <input type="text" class="layui-input-inline layui-input" style="width: 20%;height: 35px;font-size: 14px" id="serch_conent" placeholder="搜索某文章下的评论">
+        <button class="layui-btn layui-btn-sm" lay-event="search" style="margin-left: 10px;margin-bottom: 0;width: 56px;height: 35px;font-size: 14px">搜索</button>
+        <button class="layui-btn layui-btn-normal layui-btn-sm" lay-event="reset" style="margin-left: 10px;margin-bottom: 0;width: 56px;height: 35px;font-size: 14px">重置</button>
+
+    </div>
+</script>
+
+<!--文章表的头工具栏-->
+<script type="text/html" id="arttoolbar">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" lay-event="elite">加精</button>
+        <button class="layui-btn layui-btn-sm" lay-event="top">置顶</button>
+    </div>
+</script>
+
+<!--加精置顶表的行工具栏-->
+<script type="text/html" id="elteBar">
+    <a class="layui-btn layui-btn-xs" lay-event="cancel_elite" style="width: 4vw;height: 80%;line-height: 26px;">取消加精</a>
+    <a class="layui-btn layui-btn-xs" lay-event="cancel_top" style="width: 4vw;height: 80%;line-height: 26px;">取消置顶</a>
+</script>
+
+<!-- 用户表的行工具栏-->
+<script type="text/html" id="userBar">
+    <a class="layui-btn layui-btn-xs" lay-event="ban" style="width: 3vw;height: 80%;line-height: 26px;">禁言</a>
+    <a class="layui-btn layui-btn-xs" lay-event="edit" style="width: 3vw;height: 80%;line-height: 26px;">改名</a>
+</script>
+
+<!-- 禁言表的行工具栏-->
+<script type="text/html" id="banBar">
+    <a class="layui-btn layui-btn-xs" lay-event="noban" style="width: 4vw;height: 80%;line-height: 26px;">解除禁言</a>
+    <a class="layui-btn layui-btn-xs" lay-event="addban" style="width: 4vw;height: 80%;line-height: 26px;">增加时长</a>
+</script>
+
+<!--文章表的行工具栏-->
+<script type="text/html" id="artBar">
+    <a class="layui-btn layui-btn-xs" lay-event="delart" style="width: 4vw;height: 80%;line-height: 26px;">删除</a>
+    <a class="layui-btn layui-btn-xs" lay-event="change" style="width: 4vw;height: 80%;line-height: 26px;">改变分区</a>
+</script>
+
+<!--评论表的行工具栏-->
+<script type="text/html" id="comtBar">
+    <a class="layui-btn layui-btn-xs" lay-event="del" style="width: 4vw;height: 80%;line-height: 26px;">删除</a>
+
+</script>
+
+<!--显示首页数据-->
+<script>
+
+    $(".home_page").click(function (){
+        $(".active").removeClass("active")
+        $(".home_mes").addClass("active")
+        $.ajax({
+            url:"/index/getdata",
+            method:"post",
+            success:function (data){
+                $(".a_count >p").html(data.art_count)
+                $(".u_count >p").html(data.u_dount)
+                $(".c_count >p").html(data.commt_count)
+                $(".v_count >p").html(data.visit_count)
+
+            }
+        })
+    })
+</script>
+<script type="text/html" id="form">
+
+</script>
+
+<!--点击左侧导航时切换页面-->
+<!--为table加入数据，绑定头工具栏和行工具栏的点击事件，以及设置弹出框的操作-->
+
+<script>
+    var sval=1;
+    var sprName='';
+    var alldata;
+    var count=0;
+    var car
+    $("#allUser").click(function (){
+        $(".active").removeClass("active")
+        $(".show_user").addClass("active")
+        layui.use(['table','layer'], function(){
+            let table = layui.table;
+            let layer=layui.layer
+            $.ajax({
+                url: '/users/getall',
+                method:'post',
+                success:function (res){
+                    $.each(res,function (index,obj){
+                        if(obj.is_muted===0){
+                            obj.is_muted='没有禁言'
+                        }
+                        else obj.is_muted='被禁言'
+                    })
+                    let option={
+                        elem: '#user'
+                        ,height: 'full-150'
+                        ,page: true //开启分页
+                        ,limit:15
+                        ,limits:[10,15,30,45,60]
+                        ,toolbar:"#usertoolbar"
+                        ,cols: [[ //表头
+                            {fixed: 'left',width: '5%',type:'checkbox'}
+                            ,{field: 'u_id', title: 'ID', width:'10%', sort: true,}
+                            ,{field: 'username', title: '用户名', width:'15%',edit:'text'}
+                            ,{field: 'password', title: '密码', width:'15%',edit:'text'}
+                            ,{field: 'nickname', title: '昵称', width:'15%'}
+                            ,{field: 'gender', title: '性别',width: '12%'}
+                            ,{field: 'is_muted',title: '禁言情况'}
+                            ,{fixed: 'right', width:'15%', align:'center', toolbar: '#userBar'}
+                        ]]
+                    }
+                    option.data=res
+                    table.render(option)
+                    table.on('tool(userf)',function (obj){
+                        let event=obj.event
+                        let data=obj.data
+                        if(event==='edit'){
+                            layui.use('layer', function(){
+                                let layer = layui.layer;
+
+                                layer.prompt({
+                                    title:'输入要修改的昵称'},
+                                    function(content,index){
+                                        $.ajax({
+                                            url:"/user/changeName",
+                                            method:"post",
+                                            data:{
+                                                u_id:data.u_id,
+                                                newName:content
+                                            },
+                                            success:function (res){
+                                                if(res){
+                                                    layer.close(index)
+                                                    layer.alert('修改成功！')
+                                                    $("#allUser").click()
+                                                }
+                                                else {
+                                                    layer.alert('昵称已重复')
+                                                }
+                                            }
+                                        })
+                                    }
+                                )
+                            });
+
+                        }
+                        else if(event==='ban'){
+                            layui.use(['layer','form'],function (){
+                                let layer = layui.layer;
+                                let form=layui.form;
+                                if(data.is_muted==="被禁言"){
+                                    layer.alert("已被禁言")
+                                }
+                                else {
+                                    layer.open({
+                                    type:1,
+                                    area:['600px','550px'],
+                                    title:"禁言设置",
+                                    content:$("#test"),
+                                    btn:['确定','取消'],
+                                    btn1:function (index,layero){
+                                        let reason="",time=0;
+                                        $('input[type=checkbox]:checked').each(function(index) {
+                                            if($('input[type=checkbox]:checked').length===index+1)
+                                                reason+=$(this).attr('title')
+                                            else reason=reason+$(this).attr('title')+","
+
+                                        })
+                                        $("#time option:selected").each(function (){
+                                            time=$(this).val()
+                                        })
+
+                                        if(reason.length===0){
+                                            layer.msg("请选择原因")
+
+                                        }
+                                        else if(time==='0'){
+                                            layer.msg("请选择时间")
+                                        }
+                                        else {
+                                            $.ajax({
+                                                url:"/user/setmute",
+                                                method:"post",
+                                                data:{
+                                                    u_id:data.u_id,
+                                                    time:time,
+                                                    reason:reason
+                                                },
+                                                success:function (res){
+                                                    if(res){
+                                                        layer.closeAll()
+                                                        layer.alert('禁言成功！')
+                                                        $("#allUser").click()
+                                                        $("#test").css("display","none")
+                                                    }
+                                                }
+                                            })
+                                        }
+                                    },
+                                    btn2:function (index,layero){$("#test").css("display","none")},
+                                    cancel:function (){$("#test").css("display","none")}
+
+                                })
+                                }
+                            })
+                        }
+                    })
+                    table.on('edit(userf)', function(obj){ //注：edit是固定事件名，test是table原始容器的属性 lay-filter="对应的值"
+
+                        $.ajax({
+                            url:"/user/changeup",
+                            method:"post",
+                            data:{
+                                u_id:obj.data.u_id,
+                                username:obj.data.username,
+                                password:obj.data.password
+                            },
+                            success:function (res){
+                                if(res){
+                                    layer.open({
+                                        title:"成功",
+                                        content:'修改成功',
+                                        btn:'确定',
+                                        btn1:function (index,layero){
+                                            layer.close(index)
+                                            $("#allUser").click()
+                                        },
+                                        cancel:function (){
+                                            $("#allUser").click()
+                                        }
+                                    })
+                                }
+                                else {
+                                    layer.open({
+                                        title:"失败",
+                                        content:'修改失败，用户名已存在',
+                                        btn:'确定',
+                                        btn1:function (index,layero){
+                                            layer.close(index)
+                                            $("#allUser").click()
+                                        },
+                                        cancel:function (){
+                                            $("#allUser").click()
+                                        }
+                                    })
+                                }
+
+                            }
+                        })
+                    });
+
+                    table.on('toolbar(userf)',function (obj){
+                        let event=obj.event
+                        if(event==='delete') {
+                            let checkStatus = table.checkStatus(obj.config.id);
+                            let idlist = []
+                            if (checkStatus.data.length > 0) {
+                                $.each(checkStatus.data, function (index, obj) {
+                                    idlist.push(obj.u_id)
+
+                                })
+                                layer.open({
+                                    title: '确定删除',
+                                    content: '确定要删除这' + idlist.length + '名用户吗？',
+                                    btn: ['确定', '取消'],
+                                    btn1: function (index, layero) {
+                                        $.ajax({
+                                            url: '/user/deleuser',
+                                            method: 'post',
+                                            traditional: true,
+                                            data: {
+                                                idlist: idlist
+                                            },
+                                            success: function (res) {
+                                                if (res) {
+                                                    layer.close(index);
+                                                    layer.alert('删除成功')
+                                                    $("#allUser").click()
+                                                }
+                                            }
+                                        })
+                                    },
+
+                                })
+                            } else {
+                                layer.alert('未选中任何用户')
+                            }
+                        }
+                        else if(event==='add'){
+                            layer.open({
+                                type:1,
+                                area:['350px','400px'],
+                                titile:'添加用户',
+                                content:$("#addUser"),
+                                btn:['确定','取消'],
+                                btn1:function (index,layero){
+                                    let username=$("#uname_input").val();
+                                    let password=$("#pass_input").val();
+                                    let nickname=$("#nick_input").val();
+                                    let gender=$("[type=radio]:checked").val();
+                                    if(username!==''&&password!==''&&nickname!==''){
+                                        $.ajax({
+                                            url:'/user/adduser',
+                                            method:'post',
+                                            data:{
+                                                username:username,
+                                                password:password,
+                                                nickname:nickname,
+                                                gender:gender
+                                            },
+                                            success:function (res){
+                                                if(res){
+                                                    layer.close(index)
+                                                    layer.alert('添加成功')
+                                                    $("#allUser").click()
+                                                    $("#addUser").css("display","none")
+                                                }
+                                            }
+                                        })
+                                    }
+                                },
+                                btn2:function (index,layero){$("#addUser").css("display","none")},
+                                cancel:function (){$("#addUser").css("display","none")}
+                            })
+                        }
+
+
+                    })
+                }
+            })
+            //第一个实例
+        });
+    })
+    $("#allBans").click(function (){
+        $(".active").removeClass("active")
+        $(".show_ban").addClass("active")
+        layui.use(['table','layer','form'],function (){
+            let table=layui.table;
+            let layer=layui.layer;
+            let form=layui.form;
+            $.ajax({
+                url:"/user/getmutes",
+                method:"post",
+                success:function (res){
+                    let option={
+                        elem: '#bans'
+                        ,height: 'full-150'
+                        ,page: true //开启分页
+                        ,limit:15
+                        ,limits:[10,15,30,60,90]
+                        ,cols: [[ //表头
+                            {field: 'u_id', title: '用户ID', width:'12%', sort: true, fixed: 'left'}
+                            ,{field: 'u_name', title: '用户昵称', width:'16%'}
+                            ,{field: 'f_s_time', title: '禁言时间', width:'16%'}
+                            ,{field: 'f_e_time', title: '解禁时间', width:'16%'}
+                            ,{field: 'reason', title: '禁言原因'}
+                            ,{fixed: 'right', width:'16%', align:'center', toolbar: '#banBar'}
+                        ]]
+                    }
+                    option.data=res
+                    table.render(option)
+                    table.on('tool(banf)',function (obj) {
+                        let event = obj.event
+                        let data = obj.data
+                        if(event==="noban") {
+                            layer.open({
+                                title: '解除禁言'
+                                ,content: '确定要解除用户 '+data.u_name+' 的禁言吗？',
+                                btn:['确定','取消'],
+                                btn1:function (index,layero){
+                                    $.ajax({
+                                        url:'/user/cancelmute',
+                                        method:'post',
+                                        data:{
+                                            u_id:data.u_id
+                                        },
+                                        success:function (res){
+                                            if(res){
+                                                layer.close(index)
+                                                layer.open({
+                                                    title:'成功',
+                                                    content:'解除禁言成功'
+                                                })
+                                                $("#allBans").click()
+                                            }
+                                        }
+
+                                    })
+                                }
+                            });
+                        }
+                        else if(event==='addban'){
+                            layer.open({
+                                type:1,
+                                area:['400px','300px'],
+                                title:'增加时长',
+                                content:$("#addTime"),
+                                btn:['确定','取消'],
+                                btn1:function (index,layero){
+                                    $.ajax({
+                                        url:'/user/addtime',
+                                        method:"post",
+                                        data:{
+                                            u_id:data.u_id,
+                                            time:sval
+                                        },
+                                        success:function (res){
+                                            if(res){
+                                                layer.close(index);
+                                                layer.alert("修改成功")
+                                                $("#addTime").css("display","none")
+                                                $("#allBans").click()
+                                            }
+                                        }
+                                    })
+                                },
+                                btn2:function (index,layero){$("#addTime").css("display","none")},
+                                cancel:function (){$("#addTime").css("display","none")}
+
+
+                            })
+                        }
+                    })
+
+                }
+            })
+        })
+    })
+    $("#allArts").click(function (){
+        $(".active").removeClass("active")
+        $(".show_arts").addClass("active")
+        layui.use(['table','layer'], function(){
+            let table = layui.table;
+            let layer=layui.layer;
+            $.ajax({
+                url:'/article/allarts',
+                method:'post',
+                success:function (res){
+                    let option={
+                        elem: '#arts'
+                        ,height: 'full-150'
+                        ,page: true //开启分页
+                        ,toolbar:'#arttoolbar'
+                        ,limit:15
+                        ,limits:[10,15,30,60,90]
+                        ,cols: [[ //表头
+                            {fixed: 'left',width:'5%',type:'checkbox' }
+                            ,{field: 'art_id', title: '文章ID', width:'5%', sort: true, fixed: 'left'}
+                            ,{field: 'title', title: '标题', width:'14%',templet:function (d){
+                                let remes=""
+                                if(d.is_elited===1){
+                                    remes+='<i class="layui-icon layui-icon-diamond" style="font-size: 18px;color:#009ad6;margin: auto 0"></i>'
+                                }
+                                if(d.is_top===1){
+                                    remes+='<svg class="icon" aria-hidden="true" style="font-size: 20px;color: #FF6666;">\n' +
+                                        '  <use xlink:href="#icon-top"></use>\n' +
+                                        '</svg>'
+                                }
+                                return remes+' '+d.title}}
+                            ,{field: 'content', title: '内容', width:'24%'}
+                            ,{field: 't_name',title: '分区',width: '9%'}
+                            ,{field: 'nickname', title: '作者', width:'8%'}
+                            ,{field: 'formate_time',title: '时间',width: '9%'}
+                            ,{field: 'likes',title: '收藏',width: '5%'}
+                            ,{field: 'comments',title: '回复'}
+                            ,{fixed: 'right', width:'14%', align:'center', toolbar: '#artBar'}
+
+                        ]]
+                    }
+                    option.data=res
+                    table.render(option)
+                    table.on('tool(artf)',function (obj){
+                        let event=obj.event;
+                        let data=obj.data;
+                        $("#showArtMes").html("将要删除 [ "+data.title+" ]")
+                        if(event==='delart'){
+                            layer.open({
+                                type:1,
+                                title:'选择原因',
+                                area:['660px','320px'],
+                                content:$("#delReason"),
+                                btn:['删除','取消'],
+                                btn1:function (index,layero){
+                                    let reason="",time=0;
+                                    $('input[type=checkbox]:checked').each(function(index) {
+                                        if($('input[type=checkbox]:checked').length===index+1)
+                                            reason+=$(this).attr('title')
+                                        else reason=reason+$(this).attr('title')+","
+
+                                    })
+                                    if(reason!==''){
+                                        console.log(reason)
+                                        $.ajax({
+                                            url:"/article/delart",
+                                            method:"post",
+                                            data:{
+                                                art_id:data.art_id
+                                            },
+                                            success:function (res){
+                                                console.log(res)
+                                                if(res){
+                                                    layer.close(index)
+                                                    layer.alert("删除成功！删帖原因："+reason)
+                                                    $("#allArts").click()
+                                                    $("#reset_r").click()
+                                                    $("#delReason").css("display","none")
+                                                }
+                                            }
+                                        })
+                                    }
+                                    else {
+                                        layer.msg("请选择原因",{icon:5})
+                                    }
+
+                                },
+                                btn2:function (index,layero){
+                                    $("#reset_r").click()
+                                    $("#delReason").css("display","none")
+
+                                },
+                                cancel:function (){
+                                    $("#reset_r").click()
+                                    $("#delReason").css("display","none")
+                                }
+                            })
+                        }
+                        else if(event==='change'){
+                            $("#fnamelist_3").empty()
+                            $("#fnamelist_3").append("<option value=''></option>")
+                            $.ajax({
+                                url:"/classify/typename",
+                                method:"post",
+                                success:function (res){
+                                    $.each(res,function (index1,obj1){
+                                        $.each(obj1,function (index2,obj2){
+                                            if(index2===0) $("#fnamelist_3").append("<optgroup label='"+obj2.father_name+"'></optgroup>")
+                                            if(obj2.t_name===data.t_name){
+                                                $("#fnamelist_3").append("<option disabled value='"+obj2.t_id+"'>"+obj2.t_name+"</option>")
+                                            }
+                                            else{
+                                                $("#fnamelist_3").append("<option value='"+obj2.t_id+"'>"+obj2.t_name+"</option>")
+                                            }
+                                        })
+
+                                    })
+                                    $("#curr_type").html("当前文章分区: "+data.t_name)
+                                    layui.form.render("select");
+                                    $("#choose_type").css('top','1px')
+                                    layer.open({
+                                        type:1,
+                                        title:'改变分区',
+                                        id:'changet',
+                                        area:['300px','500px'],
+                                        content:$("#choose_type"),
+                                        btn:['确定','取消'],
+                                        btn1:function (index,layero){
+                                            let id= $("#fnamelist_3 option:selected").val()
+                                            if(id==='') layer.msg('请选择分区')
+                                            else{
+                                                $.ajax({
+                                                    url:'/article/changetype',
+                                                    method:'post',
+                                                    data:{
+                                                        t_id:id,
+                                                        art_id:data.art_id
+                                                    },
+                                                    success:function (res){
+                                                        if(res){
+                                                            layer.close(index)
+                                                            layer.alert("移动分区成功")
+                                                            $("#choose_type").css('top', '-151px')
+                                                            $("#allArts").click()
+                                                        }
+                                                    }
+                                                })
+                                            }
+
+                                        },
+                                        btn2:function (index,layero){ $("#choose_type").css('top','-151px')},
+                                        cancel:function (){ $("#choose_type").css('top','-151px')}
+                                    })
+                                }
+                            })
+
+                        }
+
+                    })
+                    table.on('toolbar(artf)',function (obj){
+                        let event=obj.event;
+                        console.log(event)
+                        if(event==='elite'){
+                            let checkStatus = table.checkStatus(obj.config.id);
+                            let idlist = []
+                            console.log(checkStatus.data)
+                            if (checkStatus.data.length > 0) {
+                                $.each(checkStatus.data, function (index, obj) {
+                                    idlist.push(obj.art_id)
+                                })
+                                if(idlist.length===checkStatus.data.length){
+                                    $.ajax({
+                                        url:'/elitetop/addelite',
+                                        method:'post',
+                                        traditional: true,
+                                        data:{
+                                            idlist:idlist
+                                        },
+                                        success:function (res){
+
+                                            if(res===''){
+                                                layer.msg('加精成功',{icon:6})
+                                                $("#allArts").click()
+                                            }
+                                            else {
+                                                let str=res.slice(0,res.length-1)
+                                                layer.alert(str+'区已达加精上限')
+                                                $("#allArts").click()
+
+                                            }
+                                        }
+                                    })
+                                }
+                            }
+                        }
+                        else if(event==='top'){
+                            let checkStatus = table.checkStatus(obj.config.id);
+                            let idlist = []
+                            console.log(checkStatus.data)
+                            if (checkStatus.data.length > 0) {
+                                $.each(checkStatus.data, function (index, obj) {
+                                    idlist.push(obj.art_id)
+                                })
+                                if(idlist.length===checkStatus.data.length){
+                                    $.ajax({
+                                        url:'/elitetop/addtop',
+                                        method:'post',
+                                        traditional: true,
+                                        data:{
+                                            idlist:idlist
+                                        },
+                                        success:function (res){
+                                             if(res===''){
+                                                 layer.msg('置顶成功',{icon:6})
+                                                 $("#allArts").click()
+                                             }
+                                            else {
+                                                let str=res.slice(0,res.length-1)
+                                                 layer.alert(str+'区已达置顶上限')
+                                                 $("#allArts").click()
+
+                                             }
+                                        }
+                                    })
+                                }
+                            }
+                        }
+                    })
+
+                }
+            })
+        });
+    })
+    $("#allComts").click(function (){
+        $(".active").removeClass("active")
+        $(".show_comts").addClass("active")
+        layui.use(['layer','table','form','util'],function (){
+            let layer=layui.layer,table=layui.table,form=layui.form,util=layui.util
+            $.ajax({
+                url:"/comment/getallcomts",
+                method:"post",
+                success:function (res){
+                    let option={
+                        elem: '#commts'
+                        ,height: 'full-150'
+                        ,page: true //开启分页
+                        ,limit:15
+                        ,id:'commttable'
+                        ,limits:[10,15,30,45,60]
+                        ,toolbar:"#comttoolbar"
+                        ,cols: [[ //表头
+                            {field: 'id', title: 'ID', width:'5%', sort: true,}
+                            ,{field: 'title', title: '所在文章', width:'16%'}
+                            ,{field: 'content', title: '评论内容', width:'16%',templet:function (d){return util.escape(d.content)}}
+                            ,{field: 'nickname', title: '评论者', width:'9%'}
+                            ,{field: 'f_time', title: '评论时间',width: '13%'}
+                            ,{field: 'floor',title: '所在楼层',width: '6%'}
+                            ,{field: 'is_reply',title: '是否为回复',width: '8%'}
+                            ,{field: 'has_floor',title: '回复楼层',width: '6%'}
+                            ,{field: 'to_commt_content',title: '回复的评论',templet:function (d){return util.escape(d.to_commt_content)}}
+                            ,{fixed: 'right', width:'10%', align:'center', toolbar: '#comtBar'}
+                        ]]
+                    }
+                    option.data=res
+                    table.render(option)
+                    table.on('toolbar(comtf)',function (obj){
+                        let event=obj.event
+                        let content=$("#serch_conent").val()
+                        if(event==='search'){
+                            if(content==='') layer.msg('未输入内容',{icon:5})
+                            else{
+                                $.ajax({
+                                    url:'/comment/serchcommts',
+                                    method:'post',
+                                    data:{
+                                        keywords:content
+                                    },
+                                    success:function (res){
+                                        console.log(res)
+                                        layer.msg('搜索成功',{icon:6})
+                                        option.data=res
+                                        table.reload('commttable',{
+                                            data:res,
+                                            page:{
+                                                curr:1
+                                            }
+                                        })
+                                    }
+                                })
+                            }
+                        }
+                        else if(event==='reset'){
+                            $.ajax({
+                                url:"/comment/getallcomts",
+                                method:"post",
+                                success:function (res){
+                                    layer.msg('重置成功',{icon:6})
+                                    option.data=res
+                                    table.reload('commttable', {
+                                        data:res,
+                                        page:{
+                                            curr:1
+                                        }
+                                    })
+                                }
+                            })
+                        }
+                    })
+                    table.on('tool(comtf)',function (obj){
+                        let event=obj.event,data=obj.data
+                        $("#showArtMes").html("删除评论将同时删除它的所有回复")
+                        if(event==='del'){
+                            layer.open({
+                                type:1,
+                                title:'选择原因',
+                                area:['660px','320px'],
+                                content:$("#delReason"),
+                                btn:['删除','取消'],
+                                btn1:function (index,layero){
+                                    let reason=""
+                                    $('input[type=checkbox]:checked').each(function(index) {
+                                        if($('input[type=checkbox]:checked').length===index+1)
+                                            reason+=$(this).attr('title')
+                                        else reason=reason+$(this).attr('title')+","
+
+                                    })
+                                    if(reason!==""){
+                                        $.ajax({
+                                            url:'/comment/delcomt',
+                                            method:'post',
+                                            data:{
+                                                id:data.id,
+                                                to_art_id:data.to_art_id
+                                            },
+                                            success:function (res){
+                                                if(res){
+                                                    layer.close(index)
+                                                    layer.msg("删除成功",{icon:6})
+                                                    $("#reset_r").click()
+                                                    $("#delReason").css("display","none")
+                                                    $("#allComts").click()
+                                                }
+                                            }
+                                        })
+                                    }
+                                    else{
+                                        layer.msg("请选择原因",{icon:5})
+                                    }
+                                },
+                                btn2:function (index,layero){
+                                    $("#reset_r").click()
+                                    $("#delReason").css("display","none")
+
+                                },
+                                cancel:function (){
+                                    $("#reset_r").click()
+                                    $("#delReason").css("display","none")
+                                }
+                            })
+                        }
+                    })
+                }
+            })
+
+
+        })
+    })
+    $("#allEltop").click(function (){
+        $(".active").removeClass("active")
+        $(".show_elts").addClass("active")
+        layui.use(['layer','table','form','util'],function (){
+            let layer=layui.layer,table=layui.table,form=layui.form,util=layui.util
+            $.ajax({
+                url:'/elitetop/getlimits',
+                method:'post',
+                success:function (res){
+                    $("#show_max_elite").html("分区最大精华贴数: "+res.max_elite)
+                    $("#show_max_top").html("分区最大置顶贴数: "+res.max_top)
+                }
+            })
+            $.ajax({
+                url: '/elitetop/allet',
+                method: 'post',
+                success: function (res) {
+                    let option = {
+                        elem: '#eltop'
+                        , height: 'full-150'
+                        , page: true //开启分页
+                        , limit: 15
+                        , limits: [10, 15, 30, 60, 90]
+                        , cols: [[ //表头
+                             {field: 'art_id', title: '文章ID', width: '6%', sort: true, fixed: 'left'}
+                            , {
+                                field: 'title', title: '标题', width: '14%', templet: function (d) {
+                                    let remes = ""
+                                    if (d.is_elited === 1) {
+                                        remes += '<i class="layui-icon layui-icon-diamond" style="font-size: 18px;color:#009ad6 "></i>'
+                                    }
+                                    if (d.is_top === 1) {
+                                        remes+='<svg class="icon" aria-hidden="true" style="font-size: 20px;color: #FF6666;">\n' +
+                                            '  <use xlink:href="#icon-top"></use>\n' +
+                                            '</svg>'
+                                    }
+                                    return remes +' '+ d.title
+                                }
+                            }
+                            , {field: 'content', title: '内容', width: '24%'}
+                            , {field: 't_name', title: '分区', width: '9%'}
+                            , {field: 'nickname', title: '作者', width: '8%'}
+                            , {field: 'formate_time', title: '时间', width: '9%'}
+                            , {field: 'likes', title: '收藏', width: '5%'}
+                            , {field: 'comments', title: '回复'}
+                            , {fixed: 'right', width: '14%', align: 'center', toolbar: '#elteBar'}
+
+                        ]]
+                    }
+                    option.data = res
+                    table.render(option)
+                    table.on('tool(eltf)',function (obj){
+                        let event=obj.event,data=obj.data
+                        if(event==='cancel_elite'&&data.is_elited===0){
+                            layer.msg("该帖子未加精",{icon:5})
+                        }
+                        if(event==='cancel_top'&&data.is_top===0){
+                            layer.msg("该帖子未置顶",{icon:5})
+                        }
+                        if(event==='cancel_elite'&&data.is_elite===1){
+                            $.ajax({
+                                url:'/elitetop/cancelelite',
+                                method:'post',
+                                data:{
+                                    art_id:data.art_id
+                                },
+                                success:function (res){
+                                    if(res){
+                                        layer.msg("取消加精成功",{icon:6})
+                                        $("#allEltop").click()
+                                    }
+                                }
+                            })
+                        }
+                        else if(event==='cancel_top'&&data.is_top===1){
+                            $.ajax({
+                                url:'/elitetop/canceltop',
+                                method:'post',
+                                data:{
+                                    art_id:data.art_id
+                                },
+                                success:function (res){
+                                    if(res){
+                                        layer.msg("取消置顶成功",{icon:6})
+                                        $("#allEltop").click()
+
+                                    }
+                                }
+                            })
+                        }
+                    })
+                    $("#set_elite").click(function (){
+                        let new_limit=$("#elite_value").val()
+                        if(new_limit==='') layer.msg("请输入数字",{icon:5})
+                        else{
+                           if(isNaN(new_limit)) layer.msg("请输入数字",{icon:5})
+                           else{
+                                $.ajax({
+                                    url:'/elitetop/editelite',
+                                    method:'post',
+                                    data:{
+                                        value:new_limit
+                                    },
+                                    success:function (res){
+                                        if(res){
+                                            layer.msg("修改成功",{icon:6})
+                                            $("#elite_value").val('')
+                                            $("#allEltop").click()
+                                        }
+                                    }
+                                })
+                           }
+                        }
+                    })
+                    $("#set_top").click(function (){
+                        let new_limit=$("#top_value").val()
+                        if(new_limit==='') layer.msg("请输入数字",{icon:5})
+                        else{
+                            if(isNaN(new_limit)) layer.msg("请输入数字",{icon:5})
+                            else{
+                                $.ajax({
+                                    url:'/elitetop/edittop',
+                                    method:'post',
+                                    data:{
+                                        value:new_limit
+                                    },
+                                    success:function (res){
+                                        if(res){
+                                            layer.msg("修改成功",{icon:6})
+                                            $("#top_value").val('')
+                                            $("#allEltop").click()
+                                        }
+                                    }
+                                })
+                            }
+                        }
+                    })
+                }
+            })
+
+        })
+    })
+    $("#allSort").click(function (){
+        $(".active").removeClass("active")
+        $(".show_sort").addClass("active")
+        $("#fnamelist").empty()
+        $("#fnamelist").append("<option value=新建'></option>")
+        $("#fnamelist_2").empty()
+        $("#fnamelist_2").append("<option value=''></option>")
+        $("#imgItems").empty()
+        $("#test1").addClass("layui-btn-disabled")
+        $("#test1").attr("disabled","disabled")
+        count+=1
+        $.ajax({
+            url:"/classify/typename",
+            method:"post",
+            success:function (res){
+                let data=[],cnt=0
+                alldata=res;
+                $.each(alldata,function (index1,obj1){
+                    $.each(obj1,function (index2,obj2){
+                        if(index2===0) $("#fnamelist_2").append("<optgroup label='"+obj2.father_name+"'></optgroup>")
+                        $("#fnamelist_2").append("<option value='"+obj2.t_id+"'>"+obj2.t_name+"</option>")
+                        if(cnt===0&&index2===0){
+                            $("#show_name").html(obj2.t_name)
+                        }
+                        if(obj2.back_img!=="null"){
+                            $("#imgItems").append("<img src='/imgs/"+obj2.back_img+"' alt='"+obj2.t_name+"'>")
+                        }
+                        else {
+                            $("#imgItems").append("<img src='/imgs/default_bg.jpg' alt='"+obj2.t_name+"'>")
+                        }
+
+                    })
+                    cnt+=1
+                })
+
+                $.each(res,function (index,obj){
+
+                    let child=[]
+                    $.each(obj,function (index2,obj2){
+                        child.push({title:obj2.t_name,id:obj2.t_id})
+                    })
+                    let node={title:obj[0].father_name,id:obj[0].father_name,spread:false,children:child}
+                    if(sprName===obj[0].father_name){
+                        node.spread=true
+                    }
+                    data.push(node)
+                })
+                layui.use(['tree', 'util','layer','form','carousel'], function() {
+                    let tree = layui.tree, layer = layui.layer, util = layui.util,form=layui.form
+                    let carousel = layui.carousel;
+                    if(count===1)
+                    {
+                        car = carousel.render({
+                            elem: '#allBackImg'
+                            , id: "cacaca"
+                            ,interval:2000
+                            , width: '88%' //设置容器宽度
+                            ,height:'30%'
+                            , arrow: 'hover' //始终显示箭头
+                            //,anim: 'updown' //切换动画方式
+                        });
+
+                        let on = carousel.on('change(carf)', function (obj) { //test1来源于对应HTML容器的 lay-filter="test1" 属性值
+                            let d = obj.item[0]
+                            $("#show_name").html(d.alt)
+                        });
+                    }
+                    else car.reload()
+                    tree.render({
+                        elem: '#test9'
+                        ,data: data
+                        ,id:'typeaa'
+                        ,edit:['update','del']
+                        ,operate:function (obj){
+                            let data=obj.data,elem=obj.elem
+                            if(obj.type==='del'){
+                                if(!$.isEmptyObject(data.children)){
+                                    $.ajax({
+                                        url:'/classify/delfname',
+                                        method:'post',
+                                        data:{
+                                            fname:data.title
+                                        },
+                                        success:function (res){
+                                            layer.alert("删除成功")
+
+                                            $("#allSort").click()
+                                        }
+                                    })
+                                }
+                                else {
+                                    $.ajax({
+                                        url:'/classify/delcname',
+                                        method:'post',
+                                        data:{
+                                            t_id:data.id
+                                        },
+                                        success:function (res){
+                                            sprName = res
+                                            layer.alert("删除成功")
+                                            $("#allSort").click()
+                                        }
+                                    })
+                                }
+                            }
+                            else if(obj.type==='update'){
+                                if(!$.isEmptyObject(data.children)){
+                                    $.ajax({
+                                        url:"/classify/changefname",
+                                        method:"post",
+                                        data:{
+                                            oldname:data.id,
+                                            newname:data.title
+                                        },
+                                        success:function (res){
+                                            if(res){
+                                                sprName=data.title
+                                                layer.alert("修改成功")
+                                                $("#allSort").click()
+                                            }
+                                        }
+                                    })
+                                }
+                                else {
+                                    $.ajax({
+                                        url: "/classify/changecname",
+                                        method: 'post',
+                                        data: {
+                                            t_id: data.id,
+                                            newname: data.title
+                                        },
+                                        success: function (res) {
+                                            sprName = res
+                                            layer.alert("修改成功")
+                                            $("#allSort").click()
+                                        }
+                                    })
+                                }
+                            }
+                        }
+                    });
+                    $.each(data,function (index,obj){
+                        $("#fnamelist").append("<option value='"+obj.title+"'>"+obj.title+"</option>")
+                    })
+                    $("#fnamelist").append("<option value='新建'>新建分区</option>")
+                    $(".layui-icon-file").addClass("layui-icon-component")
+                    $(".layui-icon-file").removeClass("layui-icon-file")
+                    form.on('select(ssss)',function (data){
+                        if($("#fnamelist option:selected").val()!=='新建'){
+                            $("#ftname_input").addClass('layui-disabled')
+                        }
+                        else{
+                            $("#ftname_input").removeClass('layui-disabled')
+                        }
+                    })
+                    form.on('select(timg)',function (data){
+                        if($("#fnamelist_2 option:selected").val()!==''){
+                            $("#test1").removeClass('layui-btn-disabled')
+                            $("#test1").removeAttr("disabled")
+                            layui.use(['upload', 'element', 'layer','carousel'], function() {
+                                let upload = layui.upload,element = layui.element,layer = layui.layer;
+                                //常规使用 - 普通图片上传
+                                let uploadInst = upload.render({
+                                    elem: '#test1'
+                                    , url: '/classify/upimg/'+ $("#fnamelist_2 option:selected").val()//改成您自己的上传接口
+                                    , before: function (obj) {
+                                        //预读本地文件示例，不支持ie8
+                                        obj.preview(function (index, file, result) {
+                                            $('#demo1').attr('src', result); //图片链接（base64）
+                                        });
+
+                                        element.progress('demo', '0%'); //进度条复位
+                                        layer.msg('上传中', {icon: 16, time: 0});
+                                    }
+                                    , done: function (res) {
+                                        //如果上传失败
+                                        if (res.code > 0) {
+                                            return layer.msg('上传失败');
+                                        }
+                                        //上传成功的一些操作
+                                        //……
+                                        $('#demoText').html(''); //置空上传失败的状态
+                                    }
+                                    , error: function () {
+                                        //演示失败状态，并实现重传
+                                        let demoText = $('#demoText');
+                                        demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-xs demo-reload">重试</a>');
+                                        demoText.find('.demo-reload').on('click', function () {
+                                            uploadInst.upload();
+
+                                        });
+                                    }
+                                    //进度条
+                                    , progress: function (n, index, e) {
+                                        element.progress('demo', n + '%'); //可配合 layui 进度条元素使用
+                                        if (n === 100) {
+                                            layer.msg('上传完毕', {icon: 1});
+                                        }
+                                        car.reload()
+                                        $("#allSort").click()
+                                    }
+                                });
+                            })
+                        }
+                        else {
+                            $("#test1").addClass('layui-btn-disabled')
+                            $("#test1").attr("disabled","disabled")
+                        }
+                    })
+                    layui.form.render("select");
+                    $("#add_type").click(function (){
+
+                        layer.open({
+                            type:1,
+                            title:'创建专区',
+                            area:['400px','500px'],
+                            content:$("#addType"),
+                            btn:['创建','取消'],
+                            id:'asasas',
+                            // shade:false,
+                            btn1:function (index,layero){
+                                let slec_val=$("#fnamelist option:selected").val()
+                                let fname_in=$("#ftname_input").val()
+                                let childname=$("#ctname_input").val()
+                                let fathername=""
+                                console.log(layero)
+                                if(slec_val==="新建"){
+                                    fathername=fname_in
+                                }
+                                else fathername=slec_val
+                                if(fathername!==""){
+                                    $.ajax({
+                                        url:'/classify/addtype',
+                                        method:'post',
+                                        data:{
+                                            childname:childname,
+                                            fathername:fathername
+                                        },
+                                        success:function (res){
+                                            sprName = res
+                                            layer.close(index)
+                                            layer.alert("创建成功")
+                                            $("#reset").click()
+                                            $("#addType").css("display","none")
+                                            $("#allSort").click()
+
+                                        }
+                                    })
+                                }
+                            }
+                            ,btn2:function (i2,layero){$("#addType").css("display","none")},
+                            cancel:function (){$("#addType").css("display","none")}
+                        })
+                    })
+                })
+            }
+        })
+
+    })
+    $("#allNews").click(function (){
+        $(".active").removeClass("active")
+        $(".show_news").addClass("active")
+        $("#news").empty()
+        layui.use(['layedit','form','layer'],function (){
+            let layedit = layui.layedit,form=layui.form,layer=layui.layer;
+            let edit = layedit.build('input_news',{
+                tool: ['strong','italic','underline','del','|','left', 'center', 'right'],
+                height:'20vh'
+            });
+            $.ajax({
+                url: "/classify/typename",
+                method: "post",
+                success:function (res){
+                    let data=[],cnt=0
+                    alldata=res;
+                    $.each(alldata,function (index1,obj1){
+                        $.each(obj1,function (index2,obj2) {
+                            if (index2 === 0) $("#tname_news").append("<optgroup label='" + obj2.father_name + "'></optgroup>")
+                            $("#tname_news").append("<option value='" + obj2.t_id + "'>" + obj2.t_name + "</option>")
+                        })
+                    })
+                    layui.form.render("select");
+                    $("#publish").click(function (){
+                        let title=$("#title").val(),type=$("#tname_news option:selected").val(),content=layedit.getText(edit)
+                        if(title==='') layer.msg('请输入标题',{icon:5})
+                        if(type==='') layer.msg('请选择分区',{icon:5})
+                        if(content==='') layer.msg('请输入内容',{icon:5})
+                        if(title!==''&&type!==''&&content!==''){
+                            $.ajax({
+                                url:"/notice/addnotice",
+                                method:'post',
+                                data:{
+                                    title:title,
+                                    type_id:type,
+                                    content:content
+                                },
+                                success:function (res){
+                                    if(res){
+                                        layer.msg("发布成功",{icon:6})
+                                        $("#reset_news").click()
+                                        $("#allNews").click()
+                                    }
+                                }
+                            })
+                        }
+                    })
+                }
+            })
+            $.ajax({
+                url:'/notice/getnotice',
+                method:'post',
+                success:function (res){
+                    $.each(res,function (index,obj){
+
+                        $("#news").append("<div class='layui-card layui-col-lg3'  style='height: 25vh;margin-right:5vw;margin-left:2vw;margin-top:10px;margin-bottom:40px;border:#f2f2f2 10px solid'>" +
+                            "  <div class='layui-card-header' style='font-size: 18px;border-bottom: #f2f2f2 2px solid;height: 5vh'>"+obj.title+"<a href='javascript:void(0);' id='"+obj.art_id+"' style='position: absolute;right: 15px'><i class='layui-icon layui-icon-close'></i> </a></div>" +
+                            "<div class='layui-card-header' style='border-bottom: #f2f2f2 2px solid;height: 5vh' >"+obj.formate_time+"<span style='position: absolute;right: 15px'>"+obj.t_name+"</span></div>" +
+                            "  <div class='layui-card-body' style='overflow: auto;height: 9vh'>"+obj.content+"</div>" +
+                            "</div>")
+
+                    })
+                    $(".layui-card-header>a").click(function (){
+                        $.ajax({
+                            url:"/notice/delnotice",
+                            method:'post',
+                            data:{
+                                art_id:this.id
+                            },
+                            success:function (res){
+                                if(res){
+                                    layer.msg("删除成功",{icon:6})
+                                    $("#reset_news").click()
+                                    $("#allNews").click()
+                                }
+                            }
+                        })
+                    })
+                }
+            })
+        })
+    })
+</script>
+
+<!--禁言选项表单-->
+
+<form class="layui-form" id='test' action="" style="display: none!important;">
+    <div class="layui-form-item" style="margin-top: 10px">
+        <label class="layui-form-label" style="width: 120px">选择禁言原因</label>
+        <div class="layui-input-block">
+            <input type="checkbox" name="like[write]" value="" title="过分水贴">
+            <input type="checkbox" name="like[read]" title="反动言论">
+            <input type="checkbox" name="like[dai]" title="色情暴力">
+            <input type="checkbox" name="like[dai]" title="人身攻击">
+            <input type="checkbox" name="like[dai]" title="违反法律">
+            <input type="checkbox" name="like[dai]" title="散播广告">
+        </div>
+    </div>
+    <div class="layui-form-item" style="margin-top: 50px">
+        <label class="layui-form-label" style="width: 120px">选择禁言时间</label>
+        <div class="layui-input-block" style="width: 30%!important;padding-left: 50px">
+            <select name="time" id="time" lay-verify="required" >
+                <option value="0"></option>
+                <option value="1">1天</option>
+                <option value="7">7天</option>
+                <option value="15">15天</option>
+                <option value="30">30天</option>
+                <option value="365">一年</option>
+                <option value="9999">永封</option>
+            </select>
+        </div>
+    </div>
+
+</form>
+
+<!--添加用户选项表单-->
+
+<form class="layui-form" id="addUser" action="" style="display: none!important;">
+    <div class="layui-form-item" style="margin-top: 30px">
+        <label class="layui-form-label">用户名</label>
+        <div class="layui-input-block">
+            <input type="text" name="title" id="uname_input" required  lay-verify="required" placeholder="请输入用户名" autocomplete="off" class="layui-input" style="width: 80%">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">密码</label>
+        <div class="layui-input-block">
+            <input type="text" name="title" id="pass_input" required  lay-verify="required" placeholder="请输入密码" autocomplete="off" class="layui-input" style="width: 80%">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">昵称</label>
+        <div class="layui-input-block">
+            <input type="text" name="title" id="nick_input" required  lay-verify="required" placeholder="请输入昵称" autocomplete="off" class="layui-input" style="width: 80%">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">性别</label>
+        <div class="layui-input-block">
+            <input type="radio" name="sex" value="男" title="男" checked>
+            <input type="radio" name="sex" value="女" title="女" >
+        </div>
+    </div>
+</form>
+
+<!--增加禁言时间的表单-->
+
+<div id="addTime" style="display: none">
+    <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+        <legend>选择时间(/天)</legend>
+    </fieldset>
+    <div id="slideadd" class="demo-slider" style="margin-left: 20px;margin-right: 15px;margin-top:30px"></div>
+</div>
+
+<!--轮播图变化函数绑定-->
+<script>
+    layui.use('slider',function (){
+
+        let slider=layui.slider
+        slider.render({
+            elem: '#slideadd',
+            min:1,
+            change:function (value){
+                sval=value;
+
+            }
+        });
+    })
+</script>
+
+<!--删除帖子和回复原因的表单-->
+<form class="layui-form" id='delReason' action="" style="display: none!important;">
+    <div class="layui-form-item" style="margin-top: 20px;border-bottom: solid #f2f2f2 1px">
+        <div id="showArtMes" style="margin-left: 15px;margin-bottom: 15px"></div>
+    </div>
+    <div class="layui-form-item" style="margin-top: 20px">
+        <label class="layui-form-label" style="width: 120px">选择删除原因</label>
+        <div class="layui-input-block">
+            <input type="checkbox" name="like[write]" value="" title="低俗谩骂">
+            <input type="checkbox" name="like[read]" title="时政敏感">
+            <input type="checkbox" name="like[dai]" title="色情淫秽">
+            <input type="checkbox" name="like[dai]" title="攻击引战">
+            <input type="checkbox" name="like[dai]" title="违反法律">
+            <input type="checkbox" name="like[dai]" title="造谣造假">
+            <input type="checkbox" name="like[dai]" title="散播广告">
+            <input type="checkbox" name="like[dai]" title="其他原因" checked>
+        </div>
+    </div>
+    <div class="layui-form-item" style="margin-top: 30px">
+        <button type="reset" id="reset_r" style="position:absolute;top: -64px"></button>
+    </div>
+</form>
+
+<!--增加分区时的表单-->
+<form class="layui-form" id="addType" style="display: none!important;">
+    <div class="layui-form-item" style="margin-top: 50px">
+        <label class="layui-form-label" style="width: 120px">选择大类分区</label>
+        <div class="layui-input-block" style="width: 30%!important;padding-left: 50px">
+            <select name="time" id="fnamelist" lay-verify="required" lay-filter="ssss">
+                <option value="新建"></option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item" style="margin-top: 30px">
+        <label class="layui-form-label">或新建大类</label>
+        <div class="layui-input-block alltype">
+            <input type="text" name="title" id="ftname_input" required  lay-verify="required" placeholder="请输入大类分区名称" autocomplete="off" class="layui-input" style="width: 80%">
+        </div>
+    </div>
+    <div class="layui-form-item" style="margin-top: 30px">
+        <label class="layui-form-label">分区名称</label>
+        <div class="layui-input-block">
+            <input type="text" name="title" id="ctname_input" required  lay-verify="required" placeholder="请输入分区名称" autocomplete="off" class="layui-input" style="width: 80%">
+        </div>
+    </div>
+    <div class="layui-form-item" style="margin-top: 30px">
+        <button type="reset" id="reset" style="position:absolute;top: -64px"></button>
+    </div>
+</form>
+
+<!--移动分区时，选择分区的表单-->
+<form class="layui-form" id="choose_type" style="position:absolute;top: -545px;">
+    <div class="layui-form-item" style="margin-top: 10px">
+        <label class="layui-form-label" style="width: 60px">选择分区</label>
+        <div class="layui-input-block" style="width: 55%!important;padding-left: 5px">
+            <select name="time" id="fnamelist_3" lay-verify="required" >
+                <option value=""></option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item" style="margin-top: 20px;margin-left: 15px;font-size: 16px" id="curr_type">
+    </div>
+</form>
+</body>
+
+</html>

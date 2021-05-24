@@ -1,0 +1,8 @@
+{
+  "properties": [
+    {
+      "name": "prop.upload-folder",
+      "type": "java.lang.String",
+      "description": "Description for prop.upload-folder."
+  }
+] }
